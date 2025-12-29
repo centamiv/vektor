@@ -1,0 +1,38 @@
+{
+    "name": "centamiv/vektor",
+    "description": "A native PHP Vector Database implementation with strict binary storage and Zero-RAM overhead.",
+    "type": "project",
+    "license": "MIT",
+    "keywords": [
+        "vector-database",
+        "php",
+        "hnsw",
+        "search",
+        "embeddings",
+        "binary-storage"
+    ],
+    "authors": [
+        {
+            "name": "Ivan Centamori",
+            "email": "centamori@gmail.com"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "Centamiv\\Vektor\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Centamiv\\Vektor\\Tests\\": "tests/"
+        }
+    },
+    "require": {
+        "php": "^8.2"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^12.5"
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}

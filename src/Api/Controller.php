@@ -24,6 +24,7 @@ class Controller
                 $method === 'POST' && str_contains($uri, '/insert') => $this->handleInsert(),
                 $method === 'POST' && str_contains($uri, '/delete') => $this->handleDelete(),
                 $method === 'POST' && str_contains($uri, '/search') => $this->handleSearch(),
+                $method === 'POST' && str_contains($uri, '/optimize') => $this->handleOptimize(),
                 $method === 'GET' && str_contains($uri, '/info') => $this->handleInfo(),
                 default => $this->sendNotFound(),
             };
@@ -139,5 +140,13 @@ class Controller
                 throw new Exception("Invalid 'vector': all elements must be numeric.");
             }
         }
+    }
+
+    private function handleOptimize()
+    {
+        $optimizer = new \Centamiv\Vektor\Services\Optimizer();
+        $optimizer->run();
+
+        echo json_encode(['status' => 'success', 'message' => 'Database optimized successfully.']);
     }
 }

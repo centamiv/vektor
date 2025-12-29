@@ -10,20 +10,21 @@ class GraphFile
     /** @var resource */
     private $handle;
 
-    public function __construct()
+    public function __construct(?string $filePath = null)
     {
-        $exists = file_exists(Config::GRAPH_FILE);
+        $path = $filePath ?? Config::GRAPH_FILE;
+        $exists = file_exists($path);
         if (!$exists) {
-            touch(Config::GRAPH_FILE);
+            touch($path);
         }
-        $this->handle = fopen(Config::GRAPH_FILE, 'r+b');
+        $this->handle = fopen($path, 'r+b');
         if (!$this->handle) {
-            throw new RuntimeException("Could not open graph file");
+            throw new RuntimeException("Could not open graph file: $path");
         }
 
-        clearstatcache(true, Config::GRAPH_FILE);
+        clearstatcache(true, $path);
         // Initialize Header if new
-        if (!$exists || filesize(Config::GRAPH_FILE) === 0) {
+        if (!$exists || filesize($path) === 0) {
             $this->writeHeader(-1, 0);
         }
     }

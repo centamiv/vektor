@@ -10,12 +10,13 @@ class MetaFile
     /** @var resource */
     private $handle;
 
-    public function __construct()
+    public function __construct(?string $filePath = null)
     {
-        if (!file_exists(Config::META_FILE)) {
-            touch(Config::META_FILE);
+        $path = $filePath ?? Config::META_FILE;
+        if (!file_exists($path)) {
+            touch($path);
         }
-        $this->handle = fopen(Config::META_FILE, 'r+b');
+        $this->handle = fopen($path, 'r+b');
     }
 
     public function __destruct()

@@ -11,14 +11,16 @@ class VectorFile
     /** @var resource */
     private $handle;
 
-    public function __construct()
+    public function __construct(?string $filePath = null)
     {
-        if (!file_exists(Config::VECTOR_FILE)) {
-            touch(Config::VECTOR_FILE);
+        $path = $filePath ?? Config::VECTOR_FILE;
+
+        if (!file_exists($path)) {
+            touch($path);
         }
-        $this->handle = fopen(Config::VECTOR_FILE, 'r+b');
+        $this->handle = fopen($path, 'r+b');
         if (!$this->handle) {
-            throw new RuntimeException("Could not open vector file: " . Config::VECTOR_FILE);
+            throw new RuntimeException("Could not open vector file: " . $path);
         }
     }
 
@@ -141,5 +143,34 @@ class VectorFile
         // Write Flag = 1 (Deleted)
         fwrite($this->handle, pack('C', 1));
         fflush($this->handle);
+    }
+
+    /**
+     * Yields all valid vectors in the file.
+     * @return \Generator
+     */
+    public function scan(): \Generator
+    {
+        rewind($this->handle);
+        $fileSize = fstat($this->handle)['size'];
+
+        while (ftell($this->handle) < $fileSize) {
+            $flagData = fread($this->handle, 1);
+            if ($flagData === false || strlen($flagData) < 1) break;
+
+            $flag = unpack('C', $flagData)[1];
+
+            // Read External ID
+            $idData = fread($this->handle, 36);
+            $externalId = rtrim($idData, "\0");
+
+            // Read Vector
+            $vectorData = fread($this->handle, Config::VECTOR_DATA_SIZE);
+
+            if ($flag === 0) {
+                $vector = array_values(unpack('f*', $vectorData));
+                yield ['id' => $externalId, 'vector' => $vector];
+            }
+        }
     }
 }

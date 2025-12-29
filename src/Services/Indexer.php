@@ -20,11 +20,14 @@ class Indexer
     /** @var resource|null */
     private $lockHandle = null;
 
-    public function __construct()
-    {
-        $this->vectorFile = new VectorFile();
-        $this->graphFile = new GraphFile();
-        $this->metaFile = new MetaFile();
+    public function __construct(
+        ?VectorFile $vectorFile = null,
+        ?GraphFile $graphFile = null,
+        ?MetaFile $metaFile = null
+    ) {
+        $this->vectorFile = $vectorFile ?? new VectorFile();
+        $this->graphFile = $graphFile ?? new GraphFile();
+        $this->metaFile = $metaFile ?? new MetaFile();
         $this->hnswLogic = new HnswLogic($this->vectorFile, $this->graphFile);
     }
 
@@ -237,13 +240,13 @@ class Indexer
         return $level;
     }
 
-    private function acquireLock()
+    protected function acquireLock()
     {
         $this->lockHandle = fopen(Config::LOCK_FILE, 'c');
         flock($this->lockHandle, LOCK_EX); // Exclusive for writing
     }
 
-    private function releaseLock()
+    protected function releaseLock()
     {
         flock($this->lockHandle, LOCK_UN);
         fclose($this->lockHandle);

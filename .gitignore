@@ -4,6 +4,7 @@ data/*.bin
 data/*.lock
 .DS_Store
 .phpunit.*
+.env
 
 # Editors
 .vscode/

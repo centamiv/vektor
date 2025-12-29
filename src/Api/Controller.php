@@ -2,6 +2,7 @@
 
 namespace Centamiv\Vektor\Api;
 
+use Centamiv\Vektor\Core\Config;
 use Centamiv\Vektor\Services\Indexer;
 use Centamiv\Vektor\Services\Searcher;
 use Exception;
@@ -19,6 +20,13 @@ class Controller
         try {
             $method = $_SERVER['REQUEST_METHOD'];
             $uri = $_SERVER['REQUEST_URI'];
+
+            if ($method === 'GET' && str_contains($uri, '/up')) {
+                $this->handleUp();
+                return;
+            }
+
+            $this->authenticate();
 
             match (true) {
                 $method === 'POST' && str_contains($uri, '/insert') => $this->handleInsert(),
@@ -148,5 +156,35 @@ class Controller
         $optimizer->run();
 
         echo json_encode(['status' => 'success', 'message' => 'Database optimized successfully.']);
+    }
+
+    private function handleUp()
+    {
+        echo json_encode(['status' => 'up']);
+    }
+
+    private function authenticate(): void
+    {
+        $token = Config::getApiToken();
+
+        // If no token is configured in .env, Auth is disabled (Free access)
+        if (empty($token)) {
+            return;
+        }
+
+        $authHeader = $_SERVER['HTTP_AUTHORIZATION'] ?? '';
+
+        // Handle "Bearer <token>"
+        if (preg_match('/Bearer\s(\S+)/', $authHeader, $matches)) {
+            $providedToken = $matches[1];
+            if ($providedToken === $token) {
+                return;
+            }
+        }
+
+        // If we fall through, Auth failed
+        http_response_code(401);
+        echo json_encode(['error' => 'Unauthorized']);
+        exit;
     }
 }

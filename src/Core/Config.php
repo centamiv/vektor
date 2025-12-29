@@ -33,4 +33,29 @@ final class Config
 
     // Lock File
     public const LOCK_FILE = self::DATA_DIR . '/db.lock';
+
+    public static function getApiToken(?string $envPath = null): ?string
+    {
+        $envFile = $envPath ?? (__DIR__ . '/../../.env');
+        if (!file_exists($envFile)) {
+            return null;
+        }
+
+        $lines = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+        foreach ($lines as $line) {
+            if (str_starts_with(trim($line), '#')) {
+                continue;
+            }
+            $parts = explode('=', $line, 2);
+            if (count($parts) === 2) {
+                $key = trim($parts[0]);
+                $value = trim($parts[1]);
+                if ($key === 'VEKTOR_API_TOKEN') {
+                    // Remove quotes if present
+                    return trim($value, '"\'');
+                }
+            }
+        }
+        return null;
+    }
 }

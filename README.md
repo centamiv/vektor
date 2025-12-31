@@ -1,8 +1,10 @@
 # Vektor - Native PHP Vector Database
 
-**Vektor** is a high-performance, purely file-based, embedded Vector Database written entirely in native PHP. It is designed for **"Zero-RAM Overhead"**, meaning it does not require loading your entire dataset into memory to function. 
+**Vektor** is a high-performance, purely file-based, embedded **Vector Database** written entirely in native PHP. It is designed for **Zero-RAM Overhead**, meaning it does not require loading your entire dataset into memory to function.
 
-Instead of memory-heavy indexes, Vektor utilizes strict binary file layouts and optimized disk-seeking strategies to perform Approximate Nearest Neighbor (ANN) searches using the **HNSW** (Hierarchical Navigable Small World) algorithm.
+**Each Vektor instance operates as a standalone database**, with data stored by default in the `/data` directory.
+
+Instead of memory-heavy indexes, Vektor utilizes strict binary file layouts and optimized disk-seeking strategies to perform **Approximate Nearest Neighbor (ANN)** searches using the **HNSW (Hierarchical Navigable Small World)** algorithm.
 
 ---
 
@@ -278,7 +280,7 @@ $optimizer->run();
 
 ---
 
-## Architecture Deep Dive
+## Database File Structure
 
 Vektor achieves its performance and low memory footprint through three specialized binary files located in the `data/` directory.
 
@@ -308,7 +310,7 @@ To change this, you must modify `src/Core/Config.php` and rebuild/truncate your 
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
 Contributions are welcome! Please run the test suite before submitting a PR.
 
@@ -320,6 +322,6 @@ The test suite includes Unit tests for storage engines and Feature tests for the
 
 ---
 
-## 📜 License
+## License
 
 This project is licensed under the **MIT License**.

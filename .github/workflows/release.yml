@@ -43,8 +43,11 @@ jobs:
         run: |
           zip -r "vektor-${{ steps.timestamp.outputs.TIMESTAMP }}.zip" .
 
-      - name: Upload Release Artifact
-        uses: actions/upload-artifact@v4
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
         with:
-          name: vektor-release-${{ steps.timestamp.outputs.TIMESTAMP }}
-          path: vektor-${{ steps.timestamp.outputs.TIMESTAMP }}.zip
+          tag_name: v${{ steps.timestamp.outputs.TIMESTAMP }}
+          name: Release ${{ steps.timestamp.outputs.TIMESTAMP }}
+          files: vektor-${{ steps.timestamp.outputs.TIMESTAMP }}.zip
+          draft: false
+          prerelease: false

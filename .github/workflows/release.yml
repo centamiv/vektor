@@ -1,0 +1,50 @@
+name: Release Builder
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build Release Zip
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          tools: composer:v2
+
+      - name: Install Dependencies
+        run: composer install --no-dev --optimize-autoloader --prefer-dist --no-interaction
+
+      - name: Generate Timestamp
+        id: timestamp
+        run: echo "TIMESTAMP=$(date +'%Y%m%d%H%M%S')" >> $GITHUB_OUTPUT
+
+      - name: Clean Dev Files
+        run: |
+          rm -rf tests
+          rm -rf .git
+          rm -rf .github
+          rm -f phpunit.xml
+          rm -f .gitignore
+          rm -f _config.yml
+
+      - name: Create Zip Archive
+        run: |
+          zip -r "vektor-${{ steps.timestamp.outputs.TIMESTAMP }}.zip" .
+
+      - name: Upload Release Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: vektor-release-${{ steps.timestamp.outputs.TIMESTAMP }}
+          path: vektor-${{ steps.timestamp.outputs.TIMESTAMP }}.zip

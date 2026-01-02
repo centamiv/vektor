@@ -13,7 +13,7 @@ class VectorFile
 
     public function __construct(?string $filePath = null)
     {
-        $path = $filePath ?? Config::VECTOR_FILE;
+        $path = $filePath ?? Config::getVectorFile();
 
         if (!file_exists($path)) {
             touch($path);

@@ -10,14 +10,14 @@ class IndexerTest extends TestCase
 {
     protected function setUp(): void
     {
-        foreach ([Config::VECTOR_FILE, Config::GRAPH_FILE, Config::META_FILE, Config::LOCK_FILE] as $file) {
+        foreach ([Config::getVectorFile(), Config::getGraphFile(), Config::getMetaFile(), Config::getLockFile()] as $file) {
             if (file_exists($file)) unlink($file);
         }
     }
 
     protected function tearDown(): void
     {
-        foreach ([Config::VECTOR_FILE, Config::GRAPH_FILE, Config::META_FILE, Config::LOCK_FILE] as $file) {
+        foreach ([Config::getVectorFile(), Config::getGraphFile(), Config::getMetaFile(), Config::getLockFile()] as $file) {
             if (file_exists($file)) unlink($file);
         }
     }

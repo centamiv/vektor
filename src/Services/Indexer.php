@@ -191,13 +191,13 @@ class Indexer
     public function getStats(): array
     {
         // Clear cache to get fresh stats
-        clearstatcache(true, Config::VECTOR_FILE);
-        clearstatcache(true, Config::GRAPH_FILE);
-        clearstatcache(true, Config::META_FILE);
+        clearstatcache(true, Config::getVectorFile());
+        clearstatcache(true, Config::getGraphFile());
+        clearstatcache(true, Config::getMetaFile());
 
-        $vSize = file_exists(Config::VECTOR_FILE) ? filesize(Config::VECTOR_FILE) : 0;
-        $mSize = file_exists(Config::META_FILE) ? filesize(Config::META_FILE) : 0;
-        $gSize = file_exists(Config::GRAPH_FILE) ? filesize(Config::GRAPH_FILE) : 0;
+        $vSize = file_exists(Config::getVectorFile()) ? filesize(Config::getVectorFile()) : 0;
+        $mSize = file_exists(Config::getMetaFile()) ? filesize(Config::getMetaFile()) : 0;
+        $gSize = file_exists(Config::getGraphFile()) ? filesize(Config::getGraphFile()) : 0;
 
         // Read Graph Header
         $this->acquireLock();
@@ -242,7 +242,7 @@ class Indexer
 
     protected function acquireLock()
     {
-        $this->lockHandle = fopen(Config::LOCK_FILE, 'c');
+        $this->lockHandle = fopen(Config::getLockFile(), 'c');
         flock($this->lockHandle, LOCK_EX); // Exclusive for writing
     }
 

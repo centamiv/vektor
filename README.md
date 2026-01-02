@@ -291,6 +291,46 @@ Vektor achieves its performance and low memory footprint through three specializ
 
 ---
 
+## How to generate embeddings from a document?
+
+Vektor stores vectors, but it does not generate them. You need an embedding model for that. A great local option is [Ollama](https://ollama.com/).
+
+1. Install Ollama and pull an embedding model (e.g., `nomic-embed-text`).
+2. Use the Ollama API to generate the vector for your text.
+3. Pass that vector to Vektor:
+
+```php
+function getEmbedding(string $text): array {
+    $ch = curl_init('http://localhost:11434/api/embeddings');
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode([
+        'model' => 'nomic-embed-text',
+        'prompt' => $text
+    ]));
+
+    $response = json_decode(curl_exec($ch), true);
+    curl_close($ch);
+
+    return $response['embedding'];
+}
+
+// IMPORTANT: Vektor stores the ID and the Vector, but NOT the original content.
+// You are responsible for storing the actual text (in files, S3, etc.).
+
+// 1. Read your document
+$id = "doc-hello";
+$text = file_get_contents("{$id}.txt");
+
+// 2. Generate vector
+$vector = getEmbedding($text);
+
+// 3. Insert into Vektor using the filename/ID as the reference
+$indexer->insert($id, $vector);
+```
+
+---
+
 ## Troubleshooting
 
 ### 1. Permission Denied Errors

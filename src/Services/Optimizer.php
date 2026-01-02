@@ -26,9 +26,9 @@ class Optimizer
         $this->acquireLock();
 
         try {
-            $tmpVector = Config::DATA_DIR . '/vector.tmp';
-            $tmpGraph = Config::DATA_DIR . '/graph.tmp';
-            $tmpMeta = Config::DATA_DIR . '/meta.tmp';
+            $tmpVector = Config::getDataDir() . '/vector.tmp';
+            $tmpGraph = Config::getDataDir() . '/graph.tmp';
+            $tmpMeta = Config::getDataDir() . '/meta.tmp';
 
             // Clean up old temps just in case
             if (file_exists($tmpVector)) unlink($tmpVector);
@@ -68,9 +68,9 @@ class Optimizer
             gc_collect_cycles();
 
             // 6. Swap Files
-            $backupVector = Config::VECTOR_FILE . '.bak';
-            $backupGraph = Config::GRAPH_FILE . '.bak';
-            $backupMeta = Config::META_FILE . '.bak';
+            $backupVector = Config::getVectorFile() . '.bak';
+            $backupGraph = Config::getGraphFile() . '.bak';
+            $backupMeta = Config::getMetaFile() . '.bak';
 
             // Delete old backups
             if (file_exists($backupVector)) unlink($backupVector);
@@ -78,14 +78,14 @@ class Optimizer
             if (file_exists($backupMeta)) unlink($backupMeta);
 
             // Rename Current -> Backup
-            if (file_exists(Config::VECTOR_FILE)) rename(Config::VECTOR_FILE, $backupVector);
-            if (file_exists(Config::GRAPH_FILE)) rename(Config::GRAPH_FILE, $backupGraph);
-            if (file_exists(Config::META_FILE)) rename(Config::META_FILE, $backupMeta);
+            if (file_exists(Config::getVectorFile())) rename(Config::getVectorFile(), $backupVector);
+            if (file_exists(Config::getGraphFile())) rename(Config::getGraphFile(), $backupGraph);
+            if (file_exists(Config::getMetaFile())) rename(Config::getMetaFile(), $backupMeta);
 
             // Rename Tmp -> Current
-            rename($tmpVector, Config::VECTOR_FILE);
-            rename($tmpGraph, Config::GRAPH_FILE);
-            rename($tmpMeta, Config::META_FILE);
+            rename($tmpVector, Config::getVectorFile());
+            rename($tmpGraph, Config::getGraphFile());
+            rename($tmpMeta, Config::getMetaFile());
         } finally {
             $this->releaseLock();
         }
@@ -93,9 +93,9 @@ class Optimizer
 
     private function acquireLock()
     {
-        $this->lockHandle = fopen(Config::LOCK_FILE, 'c');
+        $this->lockHandle = fopen(Config::getLockFile(), 'c');
         if (!$this->lockHandle) {
-            throw new RuntimeException("Could not open lock file: " . Config::LOCK_FILE);
+            throw new RuntimeException("Could not open lock file: " . Config::getLockFile());
         }
         if (!flock($this->lockHandle, LOCK_EX)) {
             throw new RuntimeException("Could not acquire lock");

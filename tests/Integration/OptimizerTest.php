@@ -12,22 +12,22 @@ class OptimizerTest extends TestCase
 {
     protected function setUp(): void
     {
-        foreach ([Config::VECTOR_FILE, Config::GRAPH_FILE, Config::META_FILE, Config::LOCK_FILE] as $file) {
+        foreach ([Config::getVectorFile(), Config::getGraphFile(), Config::getMetaFile(), Config::getLockFile()] as $file) {
             if (file_exists($file)) unlink($file);
         }
 
         // Also cleanup backups and temps if any
-        foreach (glob(Config::DATA_DIR . '/*.bak') as $f) unlink($f);
-        foreach (glob(Config::DATA_DIR . '/*.tmp') as $f) unlink($f);
+        foreach (glob(Config::getDataDir() . '/*.bak') as $f) unlink($f);
+        foreach (glob(Config::getDataDir() . '/*.tmp') as $f) unlink($f);
     }
 
     protected function tearDown(): void
     {
-        foreach ([Config::VECTOR_FILE, Config::GRAPH_FILE, Config::META_FILE, Config::LOCK_FILE] as $file) {
+        foreach ([Config::getVectorFile(), Config::getGraphFile(), Config::getMetaFile(), Config::getLockFile()] as $file) {
             if (file_exists($file)) unlink($file);
         }
-        foreach (glob(Config::DATA_DIR . '/*.bak') as $f) unlink($f);
-        foreach (glob(Config::DATA_DIR . '/*.tmp') as $f) unlink($f);
+        foreach (glob(Config::getDataDir() . '/*.bak') as $f) unlink($f);
+        foreach (glob(Config::getDataDir() . '/*.tmp') as $f) unlink($f);
     }
 
     public function testOptimizerVacuumsAndBalances()
@@ -51,7 +51,7 @@ class OptimizerTest extends TestCase
         $indexer->delete('doc-2');
 
         // Check size before optimization
-        $sizeBefore = filesize(Config::VECTOR_FILE);
+        $sizeBefore = filesize(Config::getVectorFile());
         // 3 rows = 18543 bytes.
         $this->assertEquals(Config::VECTOR_ROW_SIZE * 3, $sizeBefore, "Initial size incorrect");
 
@@ -64,7 +64,7 @@ class OptimizerTest extends TestCase
 
         // Check size after optimization
         clearstatcache();
-        $sizeAfter = filesize(Config::VECTOR_FILE);
+        $sizeAfter = filesize(Config::getVectorFile());
 
         // Should be 2 rows = 12362 bytes
         $this->assertEquals(Config::VECTOR_ROW_SIZE * 2, $sizeAfter, "Vector file size did not decrease");

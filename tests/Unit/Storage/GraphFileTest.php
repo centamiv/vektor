@@ -10,12 +10,12 @@ class GraphFileTest extends TestCase
 {
     protected function setUp(): void
     {
-        if (file_exists(Config::GRAPH_FILE)) unlink(Config::GRAPH_FILE);
+        if (file_exists(Config::getGraphFile())) unlink(Config::getGraphFile());
     }
 
     protected function tearDown(): void
     {
-        if (file_exists(Config::GRAPH_FILE)) unlink(Config::GRAPH_FILE);
+        if (file_exists(Config::getGraphFile())) unlink(Config::getGraphFile());
     }
 
     public function testHeaderInitialization(): void

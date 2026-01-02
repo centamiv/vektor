@@ -12,7 +12,7 @@ class GraphFile
 
     public function __construct(?string $filePath = null)
     {
-        $path = $filePath ?? Config::GRAPH_FILE;
+        $path = $filePath ?? Config::getGraphFile();
         $exists = file_exists($path);
         if (!$exists) {
             touch($path);

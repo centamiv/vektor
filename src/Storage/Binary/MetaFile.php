@@ -12,7 +12,7 @@ class MetaFile
 
     public function __construct(?string $filePath = null)
     {
-        $path = $filePath ?? Config::META_FILE;
+        $path = $filePath ?? Config::getMetaFile();
         if (!file_exists($path)) {
             touch($path);
         }

@@ -33,7 +33,11 @@ class Searcher
     {
         $this->acquireLock();
         try {
-            $results = $this->hnswLogic->search($queryVector, $k, 50);
+            // Oversample to handle soft deletes
+            $searchK = $k + 20; // Heuristic buffer
+            $ef = max($searchK, 50);
+
+            $results = $this->hnswLogic->search($queryVector, $searchK, $ef);
 
             // Hydrate IDs
             $hydrated = [];
@@ -45,6 +49,9 @@ class Searcher
                         'score' => $res['distance']
                     ];
                 }
+                if (count($hydrated) >= $k) {
+                    break;
+                }
             }
             return $hydrated;
         } finally {
@@ -54,7 +61,7 @@ class Searcher
 
     private function acquireLock()
     {
-        $this->lockHandle = fopen(Config::LOCK_FILE, 'c');
+        $this->lockHandle = fopen(Config::getLockFile(), 'c');
         flock($this->lockHandle, LOCK_SH); // Shared for reading
     }
 

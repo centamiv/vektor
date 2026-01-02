@@ -10,12 +10,12 @@ class MetaFileTest extends TestCase
 {
     protected function setUp(): void
     {
-        if (file_exists(Config::META_FILE)) unlink(Config::META_FILE);
+        if (file_exists(Config::getMetaFile())) unlink(Config::getMetaFile());
     }
 
     protected function tearDown(): void
     {
-        if (file_exists(Config::META_FILE)) unlink(Config::META_FILE);
+        if (file_exists(Config::getMetaFile())) unlink(Config::getMetaFile());
     }
 
     public function testInsertAndFind(): void

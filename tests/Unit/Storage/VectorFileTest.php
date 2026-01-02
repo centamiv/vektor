@@ -10,12 +10,12 @@ class VectorFileTest extends TestCase
 {
     protected function setUp(): void
     {
-        if (file_exists(Config::VECTOR_FILE)) unlink(Config::VECTOR_FILE);
+        if (file_exists(Config::getVectorFile())) unlink(Config::getVectorFile());
     }
 
     protected function tearDown(): void
     {
-        if (file_exists(Config::VECTOR_FILE)) unlink(Config::VECTOR_FILE);
+        if (file_exists(Config::getVectorFile())) unlink(Config::getVectorFile());
     }
 
     public function testAppendAndRead(): void
@@ -41,10 +41,10 @@ class VectorFileTest extends TestCase
         $vec = array_fill(0, 1536, 0.0);
         $file->append("A", $vec);
 
-        $this->assertEquals(6181, filesize(Config::VECTOR_FILE));
+        $this->assertEquals(6181, filesize(Config::getVectorFile()));
 
         $file->append("B", $vec);
-        $this->assertEquals(12362, filesize(Config::VECTOR_FILE));
+        $this->assertEquals(12362, filesize(Config::getVectorFile()));
 
         unset($file);
     }

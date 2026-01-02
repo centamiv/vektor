@@ -202,6 +202,16 @@ Trigger database optimization.
 
 You can use Vektor directly in your PHP scripts without running an HTTP server. This is the fastest way to interact with the database.
 
+#### Configuration
+
+By default, Vektor stores data in the `data/` directory relative to the package root. You can change this path using the `Config` class:
+
+```php
+use Centamiv\Vektor\Core\Config;
+
+Config::setDataDir(__DIR__ . '/my_custom_data_dir');
+```
+
 #### Initialization
 
 ```php

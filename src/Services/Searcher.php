@@ -25,9 +25,9 @@ class Searcher
     /**
      * Executes a search query.
      * 
-     * @param array $queryVector
+     * @param list<float> $queryVector
      * @param int $k
-     * @return array
+     * @return list<array{id: string, vector: list<float>, score: float}>
      */
     public function search(array $queryVector, int $k = 10): array
     {
@@ -46,6 +46,7 @@ class Searcher
                 if ($data) {
                     $hydrated[] = [
                         'id' => $data['id'],
+                        'vector' => $data['vector'],
                         'score' => $res['distance']
                     ];
                 }

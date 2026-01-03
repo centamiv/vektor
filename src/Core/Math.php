@@ -9,8 +9,8 @@ final class Math
     /**
      * Calculates Cosine Similarity between two vectors.
      * 
-     * @param array $v1
-     * @param array $v2
+     * @param list<float> $v1
+     * @param list<float> $v2
      * @return float Similarity (0.0 to 1.0 mostly, can be negative)
      * @throws InvalidArgumentException
      */

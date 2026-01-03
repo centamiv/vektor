@@ -35,7 +35,7 @@ class VectorFile
      * Appends a vector to the file.
      * 
      * @param string $externalId 36-char string (UUID or padded)
-     * @param array $vector 1536 floats
+     * @param list<float> $vector 1536 floats
      * @return int Internal ID (index of the vector)
      */
     public function append(string $externalId, array $vector): int
@@ -78,7 +78,7 @@ class VectorFile
      * Reads a vector by Internal ID.
      * 
      * @param int $internalId
-     * @return array|null Returns ['id' => string, 'vector' => float[]] or null if deleted/invalid
+     * @return array{ id: string, vector: list<float> }|null Returns ['id' => string, 'vector' => float[]] or null if deleted/invalid
      */
     public function read(int $internalId): ?array
     {
@@ -147,7 +147,7 @@ class VectorFile
 
     /**
      * Yields all valid vectors in the file.
-     * @return \Generator
+     * @return \Generator<int, array{ id: string, vector: list<float> }>
      */
     public function scan(): \Generator
     {

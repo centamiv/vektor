@@ -170,6 +170,27 @@ Search for nearest neighbors.
 }
 ```
 
+Optionally pass `"include_vector": true` to also get vector data of similar documents.
+
+- **Body**:
+```json
+{
+  "vector": [0.1, 0.2, 0.3, ...],
+  "include_vector": true,
+  "k": 5
+}
+```
+- **Response**:
+```json
+{
+  "results": [
+    { "id": "my-doc-id", "distance": 0.95, "vector": [0.5, 1.0, 0.3, ...] },
+    { "id": "another-id", "distance": 0.88, "vector": [0.5, 1.1, 0.3, ...] }
+  ]
+}
+```
+
+
 ##### `POST /delete`
 Delete a vector.
 - **Body**:

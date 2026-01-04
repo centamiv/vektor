@@ -115,7 +115,8 @@ class Controller
         }
 
         $searcher = new Searcher();
-        $results = $searcher->search($input['vector'], $k);
+        $includeVector = \filter_var($input['include_vector'] ?? false, \FILTER_VALIDATE_BOOL);
+        $results = $searcher->search($input['vector'], $k, $includeVector);
 
         echo json_encode(['results' => $results]);
     }

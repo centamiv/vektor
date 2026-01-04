@@ -5,6 +5,7 @@ namespace Centamiv\Vektor\Api;
 use Centamiv\Vektor\Core\Config;
 use Centamiv\Vektor\Services\Indexer;
 use Centamiv\Vektor\Services\Searcher;
+use Centamiv\Vektor\Services\Optimizer;
 use Exception;
 
 class Controller
@@ -12,6 +13,8 @@ class Controller
     /**
      * Handles the incoming HTTP request.
      * Routes to appropriate handler based on URI.
+     * 
+     * @return void
      */
     public function handleRequest(): void
     {
@@ -141,8 +144,8 @@ class Controller
         if (!is_array($vector)) {
             throw new Exception("Invalid 'vector': must be an array.");
         }
-        if (count($vector) !== \Centamiv\Vektor\Core\Config::DIMENSION) {
-            throw new Exception("Invalid 'vector': must have exactly " . \Centamiv\Vektor\Core\Config::DIMENSION . " dimensions.");
+        if (count($vector) !== Config::getDimensions()) {
+            throw new Exception("Invalid 'vector': must have exactly " . Config::getDimensions() . " dimensions.");
         }
         foreach ($vector as $val) {
             if (!is_numeric($val)) {
@@ -153,7 +156,7 @@ class Controller
 
     private function handleOptimize()
     {
-        $optimizer = new \Centamiv\Vektor\Services\Optimizer();
+        $optimizer = new Optimizer();
         $optimizer->run();
 
         echo json_encode(['status' => 'success', 'message' => 'Database optimized successfully.']);

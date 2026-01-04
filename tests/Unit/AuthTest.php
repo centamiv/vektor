@@ -25,25 +25,29 @@ class AuthTest extends TestCase
     public function testGetApiTokenReturnsNullWhenNoEnvFile()
     {
         // Pass a non-existent file path
-        $this->assertNull(Config::getApiToken('/non/existent/path/.env'));
+        Config::setEnvFile('/non/existent/path/.env');
+        $this->assertNull(Config::getApiToken());
     }
 
     public function testGetApiTokenReturnsValue()
     {
         file_put_contents($this->tempEnvFile, 'VEKTOR_API_TOKEN=test-token');
-        $this->assertEquals('test-token', Config::getApiToken($this->tempEnvFile));
+        Config::setEnvFile($this->tempEnvFile);
+        $this->assertEquals('test-token', Config::getApiToken());
     }
 
     public function testGetApiTokenIgnoresComments()
     {
         $content = "# Comment\nVEKTOR_API_TOKEN=valid-token\n# Another";
         file_put_contents($this->tempEnvFile, $content);
-        $this->assertEquals('valid-token', Config::getApiToken($this->tempEnvFile));
+        Config::setEnvFile($this->tempEnvFile);
+        $this->assertEquals('valid-token', Config::getApiToken());
     }
 
     public function testGetApiTokenUnquotes()
     {
         file_put_contents($this->tempEnvFile, 'VEKTOR_API_TOKEN="quoted-token"');
-        $this->assertEquals('quoted-token', Config::getApiToken($this->tempEnvFile));
+        Config::setEnvFile($this->tempEnvFile);
+        $this->assertEquals('quoted-token', Config::getApiToken());
     }
 }

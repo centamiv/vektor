@@ -46,17 +46,17 @@ class VectorFile
         // Pad ID
         $paddedId = str_pad($externalId, 36, "\0");
 
-        if (count($vector) !== Config::DIMENSION) {
-            throw new InvalidArgumentException("Vector must have " . Config::DIMENSION . " dimensions");
+        if (count($vector) !== Config::getDimensions()) {
+            throw new InvalidArgumentException("Vector must have " . Config::getDimensions() . " dimensions");
         }
 
         // Seek to end to get the new index
         fseek($this->handle, 0, SEEK_END);
         $fileSize = ftell($this->handle);
-        $internalId = $fileSize / Config::VECTOR_ROW_SIZE;
+        $internalId = $fileSize / Config::getVectorRowSize();
 
         // Verify alignment
-        if ($fileSize % Config::VECTOR_ROW_SIZE !== 0) {
+        if ($fileSize % Config::getVectorRowSize() !== 0) {
             throw new RuntimeException("Vector file corrupted. Size is not multiple of row size.");
         }
 
@@ -82,7 +82,7 @@ class VectorFile
      */
     public function read(int $internalId): ?array
     {
-        $offset = $internalId * Config::VECTOR_ROW_SIZE;
+        $offset = $internalId * Config::getVectorRowSize();
         fseek($this->handle, 0, SEEK_END);
         if ($offset >= ftell($this->handle)) {
             return null;
@@ -101,7 +101,7 @@ class VectorFile
         $externalId = rtrim($idData, "\0"); // Remove padding
 
         // Read Vector
-        $vectorData = fread($this->handle, Config::VECTOR_DATA_SIZE);
+        $vectorData = fread($this->handle, Config::getVectorDataSize());
         $vector = array_values(unpack('f*', $vectorData));
 
         return [
@@ -115,7 +115,7 @@ class VectorFile
      */
     public function readVectorOnly(int $internalId): ?array
     {
-        $offset = $internalId * Config::VECTOR_ROW_SIZE + 37; // Skip Flag(1) + ID(36)
+        $offset = $internalId * Config::getVectorRowSize() + 37; // Skip Flag(1) + ID(36)
 
         fseek($this->handle, 0, SEEK_END);
         if ($offset >= ftell($this->handle)) {
@@ -123,7 +123,7 @@ class VectorFile
         }
 
         fseek($this->handle, $offset);
-        $vectorData = fread($this->handle, Config::VECTOR_DATA_SIZE);
+        $vectorData = fread($this->handle, Config::getVectorDataSize());
         return array_values(unpack('f*', $vectorData));
     }
     /**
@@ -133,7 +133,7 @@ class VectorFile
      */
     public function delete(int $internalId): void
     {
-        $offset = $internalId * Config::VECTOR_ROW_SIZE;
+        $offset = $internalId * Config::getVectorRowSize();
         fseek($this->handle, 0, SEEK_END);
         if ($offset >= ftell($this->handle)) {
             return;
@@ -165,7 +165,7 @@ class VectorFile
             $externalId = rtrim($idData, "\0");
 
             // Read Vector
-            $vectorData = fread($this->handle, Config::VECTOR_DATA_SIZE);
+            $vectorData = fread($this->handle, Config::getVectorDataSize());
 
             if ($flag === 0) {
                 $vector = array_values(unpack('f*', $vectorData));

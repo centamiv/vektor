@@ -216,12 +216,12 @@ class Indexer
                 'meta_file_bytes' => $mSize,
             ],
             'records' => [
-                'vectors_total' => $vSize > 0 ? floor($vSize / Config::VECTOR_ROW_SIZE) : 0,
+                'vectors_total' => $vSize > 0 ? floor($vSize / Config::getVectorRowSize()) : 0,
                 'meta_entries' => $mSize > 0 ? floor($mSize / Config::META_ROW_SIZE) : 0,
                 'graph_nodes' => $gHeader[1] ?? 0,
             ],
             'config' => [
-                'dimension' => Config::DIMENSION,
+                'dimension' => Config::getDimensions(),
                 'hnsw_m' => Config::M,
                 'hnsw_ef_construction' => Config::M,
                 'max_levels' => Config::L,

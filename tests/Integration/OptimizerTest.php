@@ -36,11 +36,11 @@ class OptimizerTest extends TestCase
 
         // Insert 3 vectors (using small dimension subset, filled with 0)
         // Create Orthogonal vectors
-        $v1 = array_fill(0, Config::DIMENSION, 0.0);
+        $v1 = array_fill(0, Config::getDimensions(), 0.0);
         $v1[0] = 1.0;
-        $v2 = array_fill(0, Config::DIMENSION, 0.0);
+        $v2 = array_fill(0, Config::getDimensions(), 0.0);
         $v2[1] = 1.0;
-        $v3 = array_fill(0, Config::DIMENSION, 0.0);
+        $v3 = array_fill(0, Config::getDimensions(), 0.0);
         $v3[2] = 1.0;
 
         $indexer->insert('doc-1', $v1);
@@ -52,8 +52,8 @@ class OptimizerTest extends TestCase
 
         // Check size before optimization
         $sizeBefore = filesize(Config::getVectorFile());
-        // 3 rows = 18543 bytes.
-        $this->assertEquals(Config::VECTOR_ROW_SIZE * 3, $sizeBefore, "Initial size incorrect");
+        // 3 rows.
+        $this->assertEquals(Config::getVectorRowSize() * 3, $sizeBefore, "Initial size incorrect");
 
         // Release lock/handles by destroying indexer (implicit)
         unset($indexer);
@@ -66,8 +66,8 @@ class OptimizerTest extends TestCase
         clearstatcache();
         $sizeAfter = filesize(Config::getVectorFile());
 
-        // Should be 2 rows = 12362 bytes
-        $this->assertEquals(Config::VECTOR_ROW_SIZE * 2, $sizeAfter, "Vector file size did not decrease");
+        // Should be 2 rows
+        $this->assertEquals(Config::getVectorRowSize() * 2, $sizeAfter, "Vector file size did not decrease");
 
         // Verify Search Logic
         $searcher = new Searcher();

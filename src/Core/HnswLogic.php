@@ -29,10 +29,10 @@ class HnswLogic
     /**
      * Search for K nearest neighbors.
      * 
-     * @param array $queryVector The query vector (1536 floats)
+     * @param list<float> $queryVector The query vector (1536 floats)
      * @param int $k Number of neighbors to return
      * @param int $ef Size of the dynamic candidate list
-     * @return array Array of ['id' => int, 'distance' => float]
+     * @return list<array{id: int, distance: float}> Array of ['id' => int, 'distance' => float]
      */
     public function search(array $queryVector, int $k, int $ef): array
     {
@@ -76,11 +76,11 @@ class HnswLogic
      * Layer Search for insertion or final level search.
      * 
      * @param int $entryPoint
-     * @param array $queryVector
+     * @param list<float> $queryVector
      * @param int $ef Candidate list size
      * @param int $level Current graph level
      * @param int|null $k Final result count limit (optional)
-     * @return array
+     * @return list<array{id: int, distance: float}>
      */
     public function searchLayer(int $entryPoint, array $queryVector, int $ef, int $level, ?int $k = null): array
     {

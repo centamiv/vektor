@@ -35,7 +35,7 @@ class Indexer
      * Inserts a new vector into the database.
      * 
      * @param string $externalId
-     * @param array $vector
+     * @param list<float> $vector
      * @throws RuntimeException
      */
     public function insert(string $externalId, array $vector): void
@@ -186,7 +186,7 @@ class Indexer
     /**
      * Retrieves database statistics.
      * 
-     * @return array
+     * @return array{storage: array{vector_file_bytes: int, graph_file_bytes: int, meta_file_bytes: int}, records: array{vectors_total: int, meta_entries: int, graph_nodes: int}, config: array{dimension: int, hnsw_m: int, hnsw_ef_construction: int, max_levels: int}}
      */
     public function getStats(): array
     {

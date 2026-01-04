@@ -141,8 +141,8 @@ class Controller
         if (!is_array($vector)) {
             throw new Exception("Invalid 'vector': must be an array.");
         }
-        if (count($vector) !== \Centamiv\Vektor\Core\Config::DIMENSION) {
-            throw new Exception("Invalid 'vector': must have exactly " . \Centamiv\Vektor\Core\Config::DIMENSION . " dimensions.");
+        if (count($vector) !== \Centamiv\Vektor\Core\Config::getDimensions()) {
+            throw new Exception("Invalid 'vector': must have exactly " . \Centamiv\Vektor\Core\Config::getDimensions() . " dimensions.");
         }
         foreach ($vector as $val) {
             if (!is_numeric($val)) {

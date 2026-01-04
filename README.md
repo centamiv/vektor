@@ -16,7 +16,7 @@ Instead of memory-heavy indexes, Vektor utilizes strict binary file layouts and 
 - **Binary Storage**: Compact binary file formats for Vectors, Graph connections, and Metadata.
 - **Embedded or Server**: Use it directly in your PHP code or run it as a standalone HTTP API server.
 - **Thread-Safety**: Implements file locking (flock) to safely handle concurrent reads and writes.
-- **Cosine Similarity**: Optimized distance metric for high-dimensional embeddings (default 1536 dimensions).
+- **Cosine Similarity**: Optimized distance metric for high-dimensional embeddings (configurable, default 1536).
 
 ---
 
@@ -69,9 +69,11 @@ Vektor uses a `.env` file for configuration when running as a server.
     ```ini
     # .env
     VEKTOR_API_TOKEN=your_secure_random_string_here
+    VEKTOR_DIMENSIONS=1536
     ```
 
 -   **VEKTOR_API_TOKEN**: If set, all API requests (except `/up`) must include this token in the `Authorization` header. If left empty, the API is open to the public.
+-   **VEKTOR_DIMENSIONS**: Set the dimension of your vectors (default: 1536). IMPORTANT: Changing this requires a fresh database (delete data/ dir).
 
 ---
 
@@ -233,6 +235,13 @@ use Centamiv\Vektor\Core\Config;
 Config::setDataDir(__DIR__ . '/my_custom_data_dir');
 ```
 
+You can also set the vector dimensions (default 1536):
+
+```php
+Config::setDimensions(768);
+// Note: This must be called BEFORE initializing Indexer/Searcher
+```
+
 #### Initialization
 
 ```php
@@ -372,8 +381,9 @@ chmod -R 775 data/
 ```
 
 ### 2. "Invalid Vector Dimensions"
-Vektor is hardcoded for **1536 dimensions**. If you send a vector with 1535 or 1537 dimensions, it will be rejected. 
-To change this, you must modify `src/Core/Config.php` and rebuild/truncate your data files, as the binary stride will change.
+Vektor defaults to **1536 dimensions**. If you send a vector with different dimensions, it will be rejected. 
+To change this, you can use `VECTOR_DIMENSIONS` in your `.env` or `Config::setDimensions(N)` in your code.
+**Important**: If you change dimensions, you must start with an empty data directory, as the binary file structure depends on the dimension size.
 
 ### 3. Slow Performance?
 - **Disk I/O**: Since Vektor is disk-based, SSDs are highly recommended. HDDs will result in slow seek times.

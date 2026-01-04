@@ -29,7 +29,7 @@ class Searcher
      * @param int $k
      * @return list<array{id: string, vector: list<float>, score: float}>
      */
-    public function search(array $queryVector, int $k = 10): array
+    public function search(array $queryVector, int $k = 10, bool $includeVector = false): array
     {
         $this->acquireLock();
         try {
@@ -46,9 +46,10 @@ class Searcher
                 if ($data) {
                     $hydrated[] = [
                         'id' => $data['id'],
-                        'vector' => $data['vector'],
                         'score' => $res['distance']
-                    ];
+                    ] + (
+                        $includeVector ? ['vector' => $data['vector']] : []
+                    );
                 }
                 if (count($hydrated) >= $k) {
                     break;

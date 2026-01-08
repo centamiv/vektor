@@ -20,7 +20,7 @@ final class Config
     public const M0 = 32;
     public const L = 4; // Max levels 0-3 (So max_level is 3)
 
-    public const META_ROW_SIZE = 48; // 36 (Key) + 4 (Val) + 4 (Left) + 4 (Right)
+    public const META_ROW_SIZE = 60; // 36 (Key) + 4 (Val) + 8 (PayloadOffset) + 4 (PayloadLength) + 4 (Left) + 4 (Right)
 
     /**
      * Set the vector dimensions.
@@ -168,6 +168,16 @@ final class Config
     public static function getMetaFile(): string
     {
         return self::getDataDir() . '/meta.bin';
+    }
+
+    /**
+     * Get the path to the payload file.
+     *
+     * @return string The path to the payload file.
+     */
+    public static function getPayloadFile(): string
+    {
+        return self::getDataDir() . '/payload.bin';
     }
 
     /**

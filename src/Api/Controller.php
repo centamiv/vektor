@@ -70,7 +70,8 @@ class Controller
         $this->validateVector($input['vector']);
 
         $indexer = new Indexer();
-        $indexer->insert($input['id'], $input['vector']);
+        $metadata = $input['metadata'] ?? null;
+        $indexer->insert($input['id'], $input['vector'], $metadata);
 
         echo json_encode(['status' => 'success', 'id' => $input['id']]);
     }
@@ -119,7 +120,8 @@ class Controller
 
         $searcher = new Searcher();
         $includeVector = \filter_var($input['include_vector'] ?? false, \FILTER_VALIDATE_BOOL);
-        $results = $searcher->search($input['vector'], $k, $includeVector);
+        $includeMetadata = \filter_var($input['include_metadata'] ?? false, \FILTER_VALIDATE_BOOL);
+        $results = $searcher->search($input['vector'], $k, $includeVector, $includeMetadata);
 
         echo json_encode(['results' => $results]);
     }

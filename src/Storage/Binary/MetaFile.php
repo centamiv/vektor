@@ -32,6 +32,17 @@ class MetaFile
      */
     public function find(string $externalId): ?int
     {
+        $entry = $this->findEntry($externalId);
+        return $entry['id'] ?? null;
+    }
+
+    /**
+     * Finds the Internal ID and payload info for an External ID.
+     *
+     * @return array{id: int, payload_offset: int, payload_length: int}|null
+     */
+    public function findEntry(string $externalId): ?array
+    {
         fseek($this->handle, 0, SEEK_END);
         if (ftell($this->handle) === 0) {
             return null;
@@ -40,18 +51,17 @@ class MetaFile
         $currentNodeIdx = 0;
 
         while ($currentNodeIdx !== -1) {
-            fseek($this->handle, $currentNodeIdx * Config::META_ROW_SIZE);
-            $data = fread($this->handle, Config::META_ROW_SIZE);
-
-            // Unpack: Key(36), Val(4), Left(4), Right(4)
-            // Use 'a36' for string, 'i' for ints
-            $node = unpack('a36key/ival/ileft/iright', $data);
-            $key = rtrim($node['key'], "\0");
+            $node = $this->readNode($currentNodeIdx);
+            $key = $node['key'];
 
             $cmp = strcmp($externalId, $key);
 
             if ($cmp === 0) {
-                return $node['val'];
+                return [
+                    'id' => $node['val'],
+                    'payload_offset' => $node['payload_offset'],
+                    'payload_length' => $node['payload_length'],
+                ];
             } elseif ($cmp < 0) {
                 $currentNodeIdx = $node['left'];
             } else {
@@ -67,12 +77,14 @@ class MetaFile
      * 
      * @param string $externalId
      * @param int $internalId
+     * @param int $payloadOffset
+     * @param int $payloadLength
      */
-    public function insert(string $externalId, int $internalId): void
+    public function insert(string $externalId, int $internalId, int $payloadOffset = -1, int $payloadLength = 0): void
     {
         // Pad Key
         $paddedKey = str_pad($externalId, 36, "\0");
-        $newNodeBin = pack('a36iii', $paddedKey, $internalId, -1, -1);
+        $newNodeBin = pack('a36lqlll', $paddedKey, $internalId, $payloadOffset, $payloadLength, -1, -1);
 
         fseek($this->handle, 0, SEEK_END);
         $fileSize = ftell($this->handle);
@@ -92,9 +104,8 @@ class MetaFile
 
         while (true) {
             fseek($this->handle, $currentNodeIdx * Config::META_ROW_SIZE);
-            $data = fread($this->handle, Config::META_ROW_SIZE);
-            $node = unpack('a36key/ival/ileft/iright', $data);
-            $key = rtrim($node['key'], "\0");
+            $node = $this->readNode($currentNodeIdx);
+            $key = $node['key'];
 
             $cmp = strcmp($externalId, $key);
 
@@ -123,9 +134,16 @@ class MetaFile
      * 
      * @param string $externalId
      * @param int $newInternalId
+     * @param int|null $payloadOffset
+     * @param int|null $payloadLength
      * @return bool True if found and updated, False otherwise.
      */
-    public function update(string $externalId, int $newInternalId): bool
+    public function update(
+        string $externalId,
+        int $newInternalId,
+        ?int $payloadOffset = null,
+        ?int $payloadLength = null
+    ): bool
     {
         fseek($this->handle, 0, SEEK_END);
         if (ftell($this->handle) === 0) {
@@ -135,17 +153,25 @@ class MetaFile
         $currentNodeIdx = 0; // Root
 
         while ($currentNodeIdx !== -1) {
-            fseek($this->handle, $currentNodeIdx * Config::META_ROW_SIZE);
-            $data = fread($this->handle, Config::META_ROW_SIZE);
-            $node = unpack('a36key/ival/ileft/iright', $data);
-            $key = rtrim($node['key'], "\0");
+            $node = $this->readNode($currentNodeIdx);
+            $key = $node['key'];
 
             $cmp = strcmp($externalId, $key);
 
             if ($cmp === 0) {
                 // Found, update Value (Offset 36)
-                fseek($this->handle, ($currentNodeIdx * Config::META_ROW_SIZE) + 36);
-                fwrite($this->handle, pack('i', $newInternalId));
+                $baseOffset = $currentNodeIdx * Config::META_ROW_SIZE;
+                fseek($this->handle, $baseOffset + 36);
+                fwrite($this->handle, pack('l', $newInternalId));
+
+                if ($payloadOffset !== null) {
+                    fseek($this->handle, $baseOffset + 40);
+                    fwrite($this->handle, pack('q', $payloadOffset));
+                }
+                if ($payloadLength !== null) {
+                    fseek($this->handle, $baseOffset + 48);
+                    fwrite($this->handle, pack('l', $payloadLength));
+                }
                 return true;
             } elseif ($cmp < 0) {
                 $currentNodeIdx = $node['left'];
@@ -159,10 +185,26 @@ class MetaFile
 
     private function updateLink(int $nodeIdx, string $which, int $childIdx): void
     {
-        // Key(36) + Val(4) + Left(4) + Right(4)
-        // Left offset = 40, Right offset = 44
-        $offset = ($nodeIdx * Config::META_ROW_SIZE) + ($which === 'left' ? 40 : 44);
+        // Key(36) + Val(4) + PayloadOffset(8) + PayloadLength(4) + Left(4) + Right(4)
+        // Left offset = 52, Right offset = 56
+        $offset = ($nodeIdx * Config::META_ROW_SIZE) + ($which === 'left' ? 52 : 56);
         fseek($this->handle, $offset);
-        fwrite($this->handle, pack('i', $childIdx));
+        fwrite($this->handle, pack('l', $childIdx));
+    }
+
+    private function readNode(int $nodeIdx): array
+    {
+        fseek($this->handle, $nodeIdx * Config::META_ROW_SIZE);
+        $data = fread($this->handle, Config::META_ROW_SIZE);
+        $node = unpack('a36key/lval/qoffset/llength/lleft/lright', $data);
+
+        return [
+            'key' => rtrim($node['key'], "\0"),
+            'val' => $node['val'],
+            'payload_offset' => $node['offset'],
+            'payload_length' => $node['length'],
+            'left' => $node['left'],
+            'right' => $node['right'],
+        ];
     }
 }

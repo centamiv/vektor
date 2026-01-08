@@ -123,7 +123,8 @@ Returns database statistics.
   "storage": {
     "vector_file_bytes": 1048576,
     "graph_file_bytes": 524288,
-    "meta_file_bytes": 2048
+    "meta_file_bytes": 2048,
+    "payload_file_bytes": 4096
   },
   "records": {
     "vectors_total": 150,
@@ -142,7 +143,11 @@ Insert a vector.
 ```json
 {
   "id": "my-doc-id",
-  "vector": [0.1, 0.2, 0.3, ...]
+  "vector": [0.1, 0.2, 0.3, ...],
+  "metadata": {
+    "source": "docs/intro.md",
+    "chunk": 3
+  }
 }
 ```
 - **Response**:
@@ -173,12 +178,14 @@ Search for nearest neighbors.
 ```
 
 Optionally pass `"include_vector": true` to also get vector data of similar documents.
+Optionally pass `"include_metadata": true` to also get metadata stored with the document.
 
 - **Body**:
 ```json
 {
   "vector": [0.1, 0.2, 0.3, ...],
   "include_vector": true,
+  "include_metadata": true,
   "k": 5
 }
 ```
@@ -186,8 +193,8 @@ Optionally pass `"include_vector": true` to also get vector data of similar docu
 ```json
 {
   "results": [
-    { "id": "my-doc-id", "distance": 0.95, "vector": [0.5, 1.0, 0.3, ...] },
-    { "id": "another-id", "distance": 0.88, "vector": [0.5, 1.1, 0.3, ...] }
+    { "id": "my-doc-id", "distance": 0.95, "vector": [0.5, 1.0, 0.3, ...], "metadata": { "source": "docs/intro.md", "chunk": 3 } },
+    { "id": "another-id", "distance": 0.88, "vector": [0.5, 1.1, 0.3, ...], "metadata": { "source": "docs/faq.md", "chunk": 1 } }
   ]
 }
 ```
@@ -265,7 +272,8 @@ $id = "doc-123"; // String ID (max 36 chars)
 $vector = [0.0123, -0.5231, ...]; // Array of 1536 floats
 
 // Insert (or update if ID exists - NOTE: Updates are essentially Appends with pointer updates)
-$indexer->insert($id, $vector);
+$metadata = ['source' => 'docs/intro.md', 'chunk' => 3];
+$indexer->insert($id, $vector, $metadata);
 ```
 
 #### 2. Searching
@@ -276,12 +284,12 @@ Find the `k` nearest neighbors to a query vector.
 $queryVector = [0.0123, ...];
 $k = 5; // Number of results
 
-$results = $searcher->search($queryVector, $k);
+$results = $searcher->search($queryVector, $k, includeMetadata: true);
 
 // Output:
 // [
-//   ['id' => 'doc-123', 'score' => 0.9823],
-//   ['id' => 'doc-456', 'score' => 0.8912],
+//   ['id' => 'doc-123', 'score' => 0.9823, 'metadata' => ['source' => 'docs/intro.md', 'chunk' => 3]],
+//   ['id' => 'doc-456', 'score' => 0.8912, 'metadata' => ['source' => 'docs/faq.md', 'chunk' => 1]],
 //   ...
 // ]
 ```
@@ -326,6 +334,7 @@ Vektor achieves its performance and low memory footprint through three specializ
 
 - **`vector.bin`**: Stores raw vector data in an append-only structure.
 - **`meta.bin`**: Maps external string IDs to internal file offsets using a disk-based Binary Search Tree (BST) for efficient lookups without loading maps into RAM.
+- **`payload.bin`**: Stores serialized metadata (JSON) in an append-only structure referenced by `meta.bin`.
 - **`graph.bin`**: Stores the HNSW Graph structure to enable fast navigation and approximate nearest neighbor searches.
 - **Concurrency**: Implements advisory file locking to manage simultaneous shared reads and exclusive write operations safely.
 

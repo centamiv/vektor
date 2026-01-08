@@ -10,14 +10,14 @@ class ControllerTest extends TestCase
     protected function setUp(): void
     {
         // Clean DB
-        foreach ([Config::getVectorFile(), Config::getGraphFile(), Config::getMetaFile(), Config::getLockFile()] as $file) {
+        foreach ([Config::getVectorFile(), Config::getGraphFile(), Config::getMetaFile(), Config::getPayloadFile(), Config::getLockFile()] as $file) {
             if (file_exists($file)) unlink($file);
         }
     }
 
     protected function tearDown(): void
     {
-        foreach ([Config::getVectorFile(), Config::getGraphFile(), Config::getMetaFile(), Config::getLockFile()] as $file) {
+        foreach ([Config::getVectorFile(), Config::getGraphFile(), Config::getMetaFile(), Config::getPayloadFile(), Config::getLockFile()] as $file) {
             if (file_exists($file)) unlink($file);
         }
     }
@@ -47,14 +47,15 @@ class ControllerTest extends TestCase
     {
         // 1. Insert Data first
         $indexer = new \Centamiv\Vektor\Services\Indexer();
-        $indexer->insert("find_me", array_fill(0, 1536, 0.9));
+        $indexer->insert("find_me", array_fill(0, 1536, 0.9), ['source' => 'unit-test']);
 
         $_SERVER['REQUEST_METHOD'] = 'POST';
         $_SERVER['REQUEST_URI'] = '/search';
 
         TestableController::$mockInput = [
             'vector' => array_fill(0, 1536, 0.9),
-            'k' => 1
+            'k' => 1,
+            'include_metadata' => true
         ];
 
         $controller = new TestableController();
@@ -66,6 +67,7 @@ class ControllerTest extends TestCase
         $json = json_decode($output, true);
         $this->assertNotEmpty($json['results']);
         $this->assertEquals('find_me', $json['results'][0]['id']);
+        $this->assertEquals(['source' => 'unit-test'], $json['results'][0]['metadata']);
     }
 
     public function testDeleteSuccess(): void

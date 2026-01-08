@@ -27,6 +27,12 @@ Instead of memory-heavy indexes, Vektor utilizes strict binary file layouts and 
 
 ---
 
+## Upgrading to v2.0.0
+
+⚠️ **Important Breaking Change**: Version 2.0.0 introduces a change to the binary record length in `meta.bin`. If you are upgrading from a previous version, your existing data files will be **incompatible**. You must **delete your existing `data/` directory** and re-index (rebuild) your dataset.
+
+---
+
 ## Installation
 
 ### 1. Installation via Composer

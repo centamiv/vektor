@@ -26,9 +26,10 @@ jobs:
       - name: Install Dependencies
         run: composer install --no-dev --optimize-autoloader --prefer-dist --no-interaction
 
-      - name: Generate Timestamp
-        id: timestamp
-        run: echo "TIMESTAMP=$(date +'%Y%m%d%H%M%S')" >> $GITHUB_OUTPUT
+      - name: Get version from composer.json
+        id: get_version
+        run: |
+          echo "VERSION=$(jq -r .version composer.json)" >> $GITHUB_OUTPUT
 
       - name: Clean Dev Files
         run: |
@@ -41,13 +42,13 @@ jobs:
 
       - name: Create Zip Archive
         run: |
-          zip -r "vektor-${{ steps.timestamp.outputs.TIMESTAMP }}.zip" .
+          zip -r "vektor-${{ steps.get_version.outputs.VERSION }}.zip" .
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: v${{ steps.timestamp.outputs.TIMESTAMP }}
-          name: Release ${{ steps.timestamp.outputs.TIMESTAMP }}
-          files: vektor-${{ steps.timestamp.outputs.TIMESTAMP }}.zip
+          tag_name: v${{ steps.get_version.outputs.VERSION }}
+          name: Release ${{ steps.get_version.outputs.VERSION }}
+          files: vektor-${{ steps.get_version.outputs.VERSION }}.zip
           draft: false
           prerelease: false

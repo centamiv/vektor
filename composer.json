@@ -3,6 +3,7 @@
     "description": "A native PHP Vector Database implementation with strict binary storage and Zero-RAM overhead.",
     "type": "project",
     "license": "MIT",
+    "version": "2.0.0",
     "keywords": [
         "vector-database",
         "php",

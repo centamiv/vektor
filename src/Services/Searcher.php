@@ -5,12 +5,16 @@ namespace Centamiv\Vektor\Services;
 use Centamiv\Vektor\Core\Config;
 use Centamiv\Vektor\Core\HnswLogic;
 use Centamiv\Vektor\Storage\Binary\GraphFile;
+use Centamiv\Vektor\Storage\Binary\MetaFile;
+use Centamiv\Vektor\Storage\Binary\PayloadFile;
 use Centamiv\Vektor\Storage\Binary\VectorFile;
 
 class Searcher
 {
     private VectorFile $vectorFile;
     private GraphFile $graphFile;
+    private MetaFile $metaFile;
+    private PayloadFile $payloadFile;
     private HnswLogic $hnswLogic;
     /** @var resource|null */
     private $lockHandle = null;
@@ -19,6 +23,8 @@ class Searcher
     {
         $this->vectorFile = new VectorFile();
         $this->graphFile = new GraphFile();
+        $this->metaFile = new MetaFile();
+        $this->payloadFile = new PayloadFile();
         $this->hnswLogic = new HnswLogic($this->vectorFile, $this->graphFile);
     }
 
@@ -27,9 +33,16 @@ class Searcher
      * 
      * @param list<float> $queryVector
      * @param int $k
-     * @return list<array{id: string, vector?: list<float>, score: float}>
+     * @param bool $includeVector
+     * @param bool $includeMetadata
+     * @return list<array{id: string, vector?: list<float>, metadata?: mixed, score: float}>
      */
-    public function search(array $queryVector, int $k = 10, bool $includeVector = false): array
+    public function search(
+        array $queryVector,
+        int $k = 10,
+        bool $includeVector = false,
+        bool $includeMetadata = false
+    ): array
     {
         $this->acquireLock();
         try {
@@ -44,11 +57,18 @@ class Searcher
             foreach ($results as $res) {
                 $data = $this->vectorFile->read($res['id']);
                 if ($data) {
+                    $metadata = null;
+                    if ($includeMetadata) {
+                        $metadata = $this->getMetadata($data['id']);
+                    }
+
                     $hydrated[] = [
                         'id' => $data['id'],
                         'score' => $res['distance']
                     ] + (
                         $includeVector ? ['vector' => $data['vector']] : []
+                    ) + (
+                        $includeMetadata ? ['metadata' => $metadata] : []
                     );
                 }
                 if (count($hydrated) >= $k) {
@@ -71,5 +91,15 @@ class Searcher
     {
         flock($this->lockHandle, LOCK_UN);
         fclose($this->lockHandle);
+    }
+
+    private function getMetadata(string $externalId): mixed
+    {
+        $entry = $this->metaFile->findEntry($externalId);
+        if (!$entry || $entry['payload_length'] <= 0) {
+            return null;
+        }
+
+        return $this->payloadFile->read($entry['payload_offset'], $entry['payload_length']);
     }
 }

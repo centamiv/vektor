@@ -64,4 +64,17 @@ class MetaFileTest extends TestCase
 
         unset($file);
     }
+
+    public function testFindEntryIncludesPayloadInfo(): void
+    {
+        $file = new MetaFile();
+        $file->insert("payload", 5, 123, 456);
+
+        $entry = $file->findEntry("payload");
+        $this->assertEquals(5, $entry['id']);
+        $this->assertEquals(123, $entry['payload_offset']);
+        $this->assertEquals(456, $entry['payload_length']);
+
+        unset($file);
+    }
 }

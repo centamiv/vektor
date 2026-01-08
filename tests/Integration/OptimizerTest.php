@@ -12,7 +12,7 @@ class OptimizerTest extends TestCase
 {
     protected function setUp(): void
     {
-        foreach ([Config::getVectorFile(), Config::getGraphFile(), Config::getMetaFile(), Config::getLockFile()] as $file) {
+        foreach ([Config::getVectorFile(), Config::getGraphFile(), Config::getMetaFile(), Config::getPayloadFile(), Config::getLockFile()] as $file) {
             if (file_exists($file)) unlink($file);
         }
 
@@ -23,7 +23,7 @@ class OptimizerTest extends TestCase
 
     protected function tearDown(): void
     {
-        foreach ([Config::getVectorFile(), Config::getGraphFile(), Config::getMetaFile(), Config::getLockFile()] as $file) {
+        foreach ([Config::getVectorFile(), Config::getGraphFile(), Config::getMetaFile(), Config::getPayloadFile(), Config::getLockFile()] as $file) {
             if (file_exists($file)) unlink($file);
         }
         foreach (glob(Config::getDataDir() . '/*.bak') as $f) unlink($f);
@@ -43,7 +43,7 @@ class OptimizerTest extends TestCase
         $v3 = array_fill(0, Config::getDimensions(), 0.0);
         $v3[2] = 1.0;
 
-        $indexer->insert('doc-1', $v1);
+        $indexer->insert('doc-1', $v1, ['source' => 'optimizer-test']);
         $indexer->insert('doc-2', $v2);
         $indexer->insert('doc-3', $v3);
 
@@ -73,9 +73,10 @@ class OptimizerTest extends TestCase
         $searcher = new Searcher();
 
         // Search for doc-1
-        $results = $searcher->search($v1, 1);
+        $results = $searcher->search($v1, 1, false, true);
         $this->assertCount(1, $results);
         $this->assertEquals('doc-1', $results[0]['id']);
+        $this->assertEquals(['source' => 'optimizer-test'], $results[0]['metadata']);
 
         // Search for doc-3
         $results3 = $searcher->search($v3, 1);

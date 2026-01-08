@@ -7,6 +7,7 @@ use Centamiv\Vektor\Core\HnswLogic;
 use Centamiv\Vektor\Core\Math;
 use Centamiv\Vektor\Storage\Binary\GraphFile;
 use Centamiv\Vektor\Storage\Binary\MetaFile;
+use Centamiv\Vektor\Storage\Binary\PayloadFile;
 use Centamiv\Vektor\Storage\Binary\VectorFile;
 use Random\Randomizer;
 use RuntimeException;
@@ -16,6 +17,7 @@ class Indexer
     private VectorFile $vectorFile;
     private GraphFile $graphFile;
     private MetaFile $metaFile;
+    private PayloadFile $payloadFile;
     private HnswLogic $hnswLogic;
     /** @var resource|null */
     private $lockHandle = null;
@@ -23,11 +25,13 @@ class Indexer
     public function __construct(
         ?VectorFile $vectorFile = null,
         ?GraphFile $graphFile = null,
-        ?MetaFile $metaFile = null
+        ?MetaFile $metaFile = null,
+        ?PayloadFile $payloadFile = null
     ) {
         $this->vectorFile = $vectorFile ?? new VectorFile();
         $this->graphFile = $graphFile ?? new GraphFile();
         $this->metaFile = $metaFile ?? new MetaFile();
+        $this->payloadFile = $payloadFile ?? new PayloadFile();
         $this->hnswLogic = new HnswLogic($this->vectorFile, $this->graphFile);
     }
 
@@ -36,14 +40,16 @@ class Indexer
      * 
      * @param string $externalId
      * @param list<float> $vector
+     * @param mixed|null $metadata
      * @throws RuntimeException
      */
-    public function insert(string $externalId, array $vector): void
+    public function insert(string $externalId, array $vector, mixed $metadata = null): void
     {
         $this->acquireLock();
         try {
             // Check existence
-            $existingId = $this->metaFile->find($externalId);
+            $existingEntry = $this->metaFile->findEntry($externalId);
+            $existingId = $existingEntry['id'] ?? null;
             $isUpdate = false;
 
             if ($existingId !== null) {
@@ -55,13 +61,21 @@ class Indexer
                 }
             }
 
+            $payloadOffset = -1;
+            $payloadLength = 0;
+            if ($metadata !== null) {
+                $payloadInfo = $this->payloadFile->append($metadata);
+                $payloadOffset = $payloadInfo['offset'];
+                $payloadLength = $payloadInfo['length'];
+            }
+
             // Append Vector
             $internalId = $this->vectorFile->append($externalId, $vector);
 
             if ($isUpdate) {
-                $this->metaFile->update($externalId, $internalId);
+                $this->metaFile->update($externalId, $internalId, $payloadOffset, $payloadLength);
             } else {
-                $this->metaFile->insert($externalId, $internalId);
+                $this->metaFile->insert($externalId, $internalId, $payloadOffset, $payloadLength);
             }
 
             // Determine Level
@@ -186,7 +200,7 @@ class Indexer
     /**
      * Retrieves database statistics.
      * 
-     * @return array{storage: array{vector_file_bytes: int, graph_file_bytes: int, meta_file_bytes: int}, records: array{vectors_total: int, meta_entries: int, graph_nodes: int}, config: array{dimension: int, hnsw_m: int, hnsw_ef_construction: int, max_levels: int}}
+     * @return array{storage: array{vector_file_bytes: int, graph_file_bytes: int, meta_file_bytes: int, payload_file_bytes: int}, records: array{vectors_total: int, meta_entries: int, graph_nodes: int}, config: array{dimension: int, hnsw_m: int, hnsw_ef_construction: int, max_levels: int}}
      */
     public function getStats(): array
     {
@@ -194,10 +208,12 @@ class Indexer
         clearstatcache(true, Config::getVectorFile());
         clearstatcache(true, Config::getGraphFile());
         clearstatcache(true, Config::getMetaFile());
+        clearstatcache(true, Config::getPayloadFile());
 
         $vSize = file_exists(Config::getVectorFile()) ? filesize(Config::getVectorFile()) : 0;
         $mSize = file_exists(Config::getMetaFile()) ? filesize(Config::getMetaFile()) : 0;
         $gSize = file_exists(Config::getGraphFile()) ? filesize(Config::getGraphFile()) : 0;
+        $pSize = file_exists(Config::getPayloadFile()) ? filesize(Config::getPayloadFile()) : 0;
 
         // Read Graph Header
         $this->acquireLock();
@@ -214,6 +230,7 @@ class Indexer
                 'vector_file_bytes' => $vSize,
                 'graph_file_bytes' => $gSize,
                 'meta_file_bytes' => $mSize,
+                'payload_file_bytes' => $pSize,
             ],
             'records' => [
                 'vectors_total' => $vSize > 0 ? floor($vSize / Config::getVectorRowSize()) : 0,

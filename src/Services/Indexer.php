@@ -250,10 +250,14 @@ class Indexer
     {
         $randomizer = new Randomizer();
         $level = 0;
+        $maxInt = PHP_INT_MAX;
+
         // -ln(uniform) * mL can also be used for geometric distribution, but keeping original logic with Randomizer
-        while ($randomizer->getFloat(0, 1) < 0.5 && $level < Config::L - 1) {
+        // Using "getInt(0, $maxInt) / $maxInt" to get a float in [0,1) range, getFloat is not available in php 8.2
+        while (($randomizer->getInt(0, $maxInt) / $maxInt) < 0.5 && $level < Config::L - 1) {
             $level++;
         }
+        
         return $level;
     }
 

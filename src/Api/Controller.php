@@ -183,7 +183,7 @@ class Controller
         // Handle "Bearer <token>"
         if (preg_match('/Bearer\s(\S+)/', $authHeader, $matches)) {
             $providedToken = $matches[1];
-            if ($providedToken === $token) {
+            if (hash_equals($token, $providedToken)) {
                 return;
             }
         }

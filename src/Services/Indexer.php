@@ -61,6 +61,9 @@ class Indexer
                 }
             }
 
+            // Append Vector first so a payload failure leaves no orphaned payload
+            $internalId = $this->vectorFile->append($externalId, $vector);
+
             $payloadOffset = -1;
             $payloadLength = 0;
             if ($metadata !== null) {
@@ -68,9 +71,6 @@ class Indexer
                 $payloadOffset = $payloadInfo['offset'];
                 $payloadLength = $payloadInfo['length'];
             }
-
-            // Append Vector
-            $internalId = $this->vectorFile->append($externalId, $vector);
 
             if ($isUpdate) {
                 $this->metaFile->update($externalId, $internalId, $payloadOffset, $payloadLength);
@@ -124,7 +124,7 @@ class Indexer
             // Connect on all levels <= $level
             for ($lc = min($level, $maxLevel); $lc >= 0; $lc--) {
                 // Determine candidates
-                $candidates = $this->hnswLogic->searchLayer($currObj, $vector, 100, $lc, Config::M);
+                $candidates = $this->hnswLogic->searchLayer($currObj, $vector, Config::EF_CONSTRUCTION, $lc, Config::M);
 
                 $neighborIds = array_column($candidates, 'id');
 
@@ -185,6 +185,13 @@ class Indexer
                 return false;
             }
 
+            // Remove from neighbors' connection lists to keep graph consistent
+            try {
+                $this->graphFile->removeFromNeighbors($internalId);
+            } catch (\RuntimeException) {
+                // Node not found in graph (data inconsistency): proceed with soft delete anyway
+            }
+
             // Soft delete in Vector File
             $this->vectorFile->delete($internalId);
 
@@ -240,7 +247,7 @@ class Indexer
             'config' => [
                 'dimension' => Config::getDimensions(),
                 'hnsw_m' => Config::M,
-                'hnsw_ef_construction' => Config::M,
+                'hnsw_ef_construction' => Config::EF_CONSTRUCTION,
                 'max_levels' => Config::L,
             ]
         ];
@@ -264,7 +271,12 @@ class Indexer
     protected function acquireLock()
     {
         $this->lockHandle = fopen(Config::getLockFile(), 'c');
-        flock($this->lockHandle, LOCK_EX); // Exclusive for writing
+        if (!$this->lockHandle) {
+            throw new RuntimeException("Could not open lock file: " . Config::getLockFile());
+        }
+        if (!flock($this->lockHandle, LOCK_EX)) {
+            throw new RuntimeException("Could not acquire lock");
+        }
     }
 
     protected function releaseLock()

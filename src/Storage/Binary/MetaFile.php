@@ -17,6 +17,9 @@ class MetaFile
             touch($path);
         }
         $this->handle = fopen($path, 'r+b');
+        if (!$this->handle) {
+            throw new RuntimeException("Could not open meta file: $path");
+        }
     }
 
     public function __destruct()

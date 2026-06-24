@@ -13,12 +13,13 @@ final class Config
     public const VECTOR_ID_SIZE = 36;
 
     public const GRAPH_HEADER_SIZE = 8; // EntryID (4) + TotalNodes (4)
-    public const GRAPH_NODE_SIZE = 324; // 1 (MaxLvl) + 128 (L0) + 64 (L1) + 64 (L2) + 64 (L3)
+    public const GRAPH_NODE_SIZE = 324; // 1 (MaxLvl) + 128 (L0) + 64 (L1) + 64 (L2) + 64 (L3) = 321 data bytes + 3 unused
 
     // Graph Config
     public const M = 16;
     public const M0 = 32;
     public const L = 4; // Max levels 0-3 (So max_level is 3)
+    public const EF_CONSTRUCTION = 100; // Candidate list size during index construction
 
     public const META_ROW_SIZE = 60; // 36 (Key) + 4 (Val) + 8 (PayloadOffset) + 4 (PayloadLength) + 4 (Left) + 4 (Right)
 

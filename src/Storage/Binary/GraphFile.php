@@ -61,14 +61,7 @@ class GraphFile
     {
         $offset = Config::GRAPH_HEADER_SIZE + ($internalId * Config::GRAPH_NODE_SIZE);
 
-        fseek($this->handle, 0, SEEK_END);
-        $currentSize = ftell($this->handle);
-
-        if ($offset > $currentSize) {
-            fseek($this->handle, $offset);
-        } else {
-            fseek($this->handle, $offset);
-        }
+        fseek($this->handle, $offset);
 
         // Max Level
         fwrite($this->handle, pack('C', $maxLevel));
@@ -105,6 +98,25 @@ class GraphFile
         fseek($this->handle, $offset);
         fwrite($this->handle, pack('l*', ...$padded));
         fflush($this->handle);
+    }
+
+    /**
+     * Removes $internalId from all its neighbors' connection lists across all levels.
+     * Call this before soft-deleting a node to keep the graph consistent.
+     */
+    public function removeFromNeighbors(int $internalId): void
+    {
+        $node = $this->readNode($internalId);
+        foreach ($node['connections'] as $level => $neighbors) {
+            foreach ($neighbors as $neighborId) {
+                $neighborNode = $this->readNode($neighborId);
+                $links = array_values(array_filter(
+                    $neighborNode['connections'][$level],
+                    fn($id) => $id !== $internalId
+                ));
+                $this->updateLinks($neighborId, $level, $links);
+            }
+        }
     }
 
     /**

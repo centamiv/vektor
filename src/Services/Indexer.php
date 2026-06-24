@@ -264,7 +264,12 @@ class Indexer
     protected function acquireLock()
     {
         $this->lockHandle = fopen(Config::getLockFile(), 'c');
-        flock($this->lockHandle, LOCK_EX); // Exclusive for writing
+        if (!$this->lockHandle) {
+            throw new RuntimeException("Could not open lock file: " . Config::getLockFile());
+        }
+        if (!flock($this->lockHandle, LOCK_EX)) {
+            throw new RuntimeException("Could not acquire lock");
+        }
     }
 
     protected function releaseLock()
